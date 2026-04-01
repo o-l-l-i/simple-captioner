@@ -1,4 +1,4 @@
-gradio>=5.31.0
+gradio>=6.10.0
 Pillow>=11.2.1
 qwen_vl_utils>=0.0.11
 transformers>=5.4.0

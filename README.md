@@ -12,7 +12,7 @@ Written by [Olli S.](https://github.com/o-l-l-i)
 
 ## ✨ Features
 
-Version 1.0.2
+Version 1.0.2.1
 
 - ✅ Uses `Qwen2.5/3 VL Instruct and Qwen3.5 4B/9B` for high-quality understanding
 - ✅ Support for:
@@ -180,6 +180,9 @@ For better performance, [you can try to install decord from source](https://gith
 ---
 
 ## Versions
+
+- **1.0.2.1 - 2026-4-1**
+  - Add support for Gradio 6.10.0.
 
 - **1.0.2 - 2026-4-1**
   - Add support for Qwen 3.5 4B and 9B.

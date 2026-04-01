@@ -532,7 +532,7 @@ css = """
 """
 
 
-with gr.Blocks(theme=gr.themes.Base(), css=css) as iface: # type: ignore
+with gr.Blocks() as iface: # type: ignore
 
     gr.Markdown("# Simple Captioner")
     gr.Markdown("A simple media caption generator for images and video using **[Qwen2.5/3/3.5 VL Instruct](https://huggingface.co/Qwen/)**")
@@ -709,4 +709,4 @@ with gr.Blocks(theme=gr.themes.Base(), css=css) as iface: # type: ignore
     )
 
 
-iface.launch(share=False, show_api=False)
+iface.launch(share=False, theme=gr.themes.Base(), css=css)
