@@ -1,8 +1,8 @@
 gradio>=5.31.0
 Pillow>=11.2.1
 qwen_vl_utils>=0.0.11
-transformers>=4.50.3
+transformers>=5.4.0
 accelerate>=0.26.0
-bitsandbytes>=0.45.5
+bitsandbytes>=0.46.1
 flash-attn>=2.7.4.post1
 hf_xet>=1.1.10

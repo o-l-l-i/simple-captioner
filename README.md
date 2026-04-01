@@ -12,10 +12,12 @@ Written by [Olli S.](https://github.com/o-l-l-i)
 
 ## ✨ Features
 
-Version 1.0.1
+Version 1.0.2
 
-- ✅ Uses `Qwen2.5/3 VL Instruct` for high-quality understanding
+- ✅ Uses `Qwen2.5/3 VL Instruct and Qwen3.5 4B/9B` for high-quality understanding
 - ✅ Support for:
+  - Qwen/Qwen3.5-4B
+  - Qwen/Qwen3.5-9B
   - Qwen/Qwen3-VL-4B-Instruct
   - Qwen/Qwen3-VL-8B-Instruct
   - Qwen/Qwen2.5-VL-3B-Instruct
@@ -178,6 +180,10 @@ For better performance, [you can try to install decord from source](https://gith
 ---
 
 ## Versions
+
+- **1.0.2 - 2026-4-1**
+  - Add support for Qwen 3.5 4B and 9B.
+  - Updated requirements (transformers to >=5.4.0 and bitsandbytes to >=0.46.1)
 
 - **1.0.1 - 2025-10-15**
   - Model dropdown with multiple model support.

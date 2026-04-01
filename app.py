@@ -2,7 +2,7 @@ import os
 import torch
 import gradio as gr
 from transformers import BitsAndBytesConfig
-from qwen_vl_utils import process_vision_info  # Ensure this is installed
+from qwen_vl_utils import process_vision_info
 from PIL import Image
 import time
 
@@ -32,6 +32,8 @@ PRESETS = {
 
 
 AVAILABLE_MODELS = [
+    "Qwen/Qwen3.5-4B",
+    "Qwen/Qwen3.5-9B",
     "Qwen/Qwen3-VL-4B-Instruct",
     "Qwen/Qwen3-VL-8B-Instruct",
     "Qwen/Qwen2.5-VL-3B-Instruct",
@@ -56,9 +58,17 @@ def build_bnb_config(quant_choice: str):
         return BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16)
     return None
 
+def is_qwen35_model(model_id: str) -> bool:
+    """Qwen3.5 models use a different class and require thinking-mode handling."""
+    return "Qwen3.5" in model_id or "Qwen3_5" in model_id
+
+
 def pick_model_class(model_id: str):
-    from transformers import AutoModelForVision2Seq
+    from transformers import AutoModelForImageTextToText
     try:
+        if is_qwen35_model(model_id):
+            from transformers import Qwen3_5ForConditionalGeneration
+            return Qwen3_5ForConditionalGeneration
         if "Qwen3-VL" in model_id:
             from transformers import Qwen3VLForConditionalGeneration
             return Qwen3VLForConditionalGeneration
@@ -67,7 +77,7 @@ def pick_model_class(model_id: str):
             return Qwen2_5_VLForConditionalGeneration
     except Exception:
         pass
-    return AutoModelForVision2Seq
+    return AutoModelForImageTextToText
 
 def unload_model():
 
@@ -116,7 +126,7 @@ def load_selected_model(model_id: str, quant_choice: str, attn_impl: str = DEFAU
         else:
             raise
     from transformers import AutoProcessor as _AP
-    processor = _AP.from_pretrained(model_id, use_fast=True)
+    processor = _AP.from_pretrained(model_id)
 
     current_model_id = model_id
     current_quant = quant_choice
@@ -215,7 +225,6 @@ def get_model_info():
 
 print("[DEBUG] Cuda available:", torch.cuda.is_available())
 
-
 def generate_caption(media_path, prompt, max_tokens, summary_mode=False, one_sentence_mode=False, resolution_mode="auto"):
     global processor, model
     assert model is not None, "Model must be loaded before generating captions."
@@ -268,8 +277,16 @@ def generate_caption(media_path, prompt, max_tokens, summary_mode=False, one_sen
         }
     ]
 
+    qwen35 = is_qwen35_model(current_model_id)
+    if qwen35:
+        messages.append({"role": "assistant", "content": "<think>\n\n</think>\n\n"})
 
-    text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    text = processor.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=not qwen35,
+        continue_final_message=qwen35,
+    )
 
     vision_info = process_vision_info(messages)
 
@@ -301,7 +318,11 @@ def generate_caption(media_path, prompt, max_tokens, summary_mode=False, one_sen
         generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
     )[0]
 
-    return caption
+    if qwen35 and "<think>" in caption:
+        import re
+        caption = re.sub(r"<think>.*?</think>\s*", "", caption, flags=re.DOTALL)
+
+    return caption.strip()
 
 
 def is_image_file(filename):
@@ -337,11 +358,11 @@ def process_folder(folder_path, prompt, skip_existing, max_tokens, summary_mode,
     print("[DEBUG] using model: ", current_model_id)
     print("[DEBUG] model quantization: ", current_quant)
     print("[DEBUG] folder_path: ", folder_path)
-    print ("[DEBUG] prompt: ", prompt)
+    print("[DEBUG] prompt: ", prompt)
     print("[DEBUG] skip_existing: ", skip_existing)
     print("[DEBUG] max_tokens: ", max_tokens)
     print("[DEBUG] summary_mode: ", summary_mode)
-    print ("[DEBUG] one_sentence_mode: ", one_sentence_mode)
+    print("[DEBUG] one_sentence_mode: ", one_sentence_mode)
     print("[DEBUG] retain_preview: ", retain_preview)
     print("[DEBUG] resolution_mode: ", resolution_mode)
     print("[DEBUG] should_abort: ", should_abort)
@@ -514,7 +535,7 @@ css = """
 with gr.Blocks(theme=gr.themes.Base(), css=css) as iface: # type: ignore
 
     gr.Markdown("# Simple Captioner")
-    gr.Markdown("A simple media caption generator for images and video using **[Qwen2.5/3 VL Instruct](https://huggingface.co/Qwen/)**")
+    gr.Markdown("A simple media caption generator for images and video using **[Qwen2.5/3/3.5 VL Instruct](https://huggingface.co/Qwen/)**")
     gr.Markdown("Supported image formats: png, jpg, jpeg, bmp, gif, webp")
     gr.Markdown("Supported video formats: mp4, mov, avi, webm, mkv, gif, flv")
     gr.Markdown("Written by [Olli S.](https://github.com/o-l-l-i)")
@@ -559,6 +580,7 @@ with gr.Blocks(theme=gr.themes.Base(), css=css) as iface: # type: ignore
         model_id = custom_id.strip() if sel == "Custom..." and custom_id and custom_id.strip() else sel
         name, device, vram, dtype, cfg = load_selected_model(model_id, quant, attn)
         status = f"✅ Loaded '{model_id}' with {quant} quantization ({attn})."
+        print ("[DEBUG]", status)
         return status, name, device, vram, dtype, cfg
     with gr.Accordion("⚙️ Model Information", open=False):
         model_name_display = gr.Textbox(label="Model Name", interactive=False)
