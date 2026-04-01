@@ -1,6 +1,6 @@
 # Simple Captioner
 
-A minimal media captioning tool powered by **[Qwen2.5/3 VL Instruct](https://huggingface.co/Qwen/)** from Alibaba Group.
+A minimal media captioning tool powered by **[Qwen2.5/3 VL Instruct and Qwen3.5 4B/9B](https://huggingface.co/Qwen/)** from Alibaba Group.
 
 This tool uses a Gradio UI to batch process folders of **images and videos** and generate descriptive captions.
 
